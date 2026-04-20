@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangGraph 教程：构建有状态的AI应用</title>
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --primary-green: #059669;
+            --primary-purple: #7c3aed;
+            --primary-orange: #ea580c;
+            --primary-teal: #0d9488;
+            --primary-pink: #db2777;
+            --langgraph-blue: #3b82f6;
+            --langgraph-green: #10b981;
+            --langgraph-purple: #8b5cf6;
+            --bg-color: #fafafa;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-blue);
+            background: #f0f9ff;
+        }
+
+        .nav-links a.active {
+            color: var(--primary-blue);
+            background: #eff6ff;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 100px 24px 64px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 48px 0 64px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 48px;
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--langgraph-purple), var(--langgraph-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero-tagline {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #f0f9ff, #faf5ff);
+            border: 1px solid #e0e7ff;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--langgraph-purple);
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 64px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-title.purple { border-color: var(--langgraph-purple); }
+        .section-title.blue { border-color: var(--langgraph-blue); }
+        .section-title.green { border-color: var(--langgraph-green); }
+        .section-title.orange { border-color: var(--primary-orange); }
+
+        /* Introduction Box */
+        .intro-box {
+            background: linear-gradient(135deg, #faf5ff, #f0f9ff);
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .intro-box p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .intro-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* What is LangGraph */
+        .what-is-box {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .what-is-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .what-is-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .what-is-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .what-is-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Core Concepts Grid */
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .concept-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .concept-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .concept-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .concept-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .concept-badge.state { background: var(--langgraph-purple); }
+        .concept-badge.node { background: var(--langgraph-blue); }
+        .concept-badge.edge { background: var(--langgraph-green); }
+        .concept-badge.graph { background: var(--primary-orange); }
+
+        .concept-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .concept-desc {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        /* Visual Diagram */
+        .diagram-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .diagram-title {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        /* Graph Visualization */
+        .graph-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .graph-node {
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            position: relative;
+            box-shadow: var(--shadow-md);
+        }
+
+        .graph-node.start {
+            background: var(--langgraph-purple);
+        }
+
+        .graph-node.process {
+            background: var(--langgraph-blue);
+        }
+
+        .graph-node.decision {
+            background: var(--langgraph-green);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+        }
+
+        .graph-node.end {
+            background: var(--primary-orange);
+        }
+
+        .node-icon {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+
+        .node-label {
+            font-size: 0.65rem;
+        }
+
+        /* Graph Flow */
+        .graph-flow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .graph-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .graph-arrow {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .graph-arrow.down {
+            font-size: 1.5rem;
+        }
+
+        .graph-arrow.cond {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .graph-arrow.cond .arrow-line {
+            font-size: 1rem;
+        }
+
+        /* State Visualization */
+        .state-box {
+            background: #faf5ff;
+            border: 2px solid var(--langgraph-purple);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+        }
+
+        .state-header {
+            font-size: 0.75rem;
+            color: var(--langgraph-purple);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .state-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .state-field {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+        }
+
+        .field-name {
+            background: var(--langgraph-purple);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .field-value {
+            color: var(--text-secondary);
+        }
+
+        /* Code Snippet */
+        .code-box {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+
+        .code-box pre {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+        }
+
+        .code-box .keyword { color: #c084fc; }
+        .code-box .string { color: #86efac; }
+        .code-box .comment { color: #94a3b8; }
+        .code-box .function { color: #60a5fa; }
+        .code-box .class { color: #fbbf24; }
+
+        /* Metaphor Box */
+        .metaphor-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 0.95rem;
+        }
+
+        .metaphor-icon {
+            color: var(--primary-orange);
+            font-weight: 700;
+        }
+
+        /* Interactive Example */
+        .interactive-demo {
+            background: linear-gradient(135deg, #f0f9ff, #faf5ff);
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .demo-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--langgraph-purple);
+        }
+
+        .demo-graph {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .demo-flow {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .demo-node {
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .demo-node.input { background: var(--langgraph-purple); }
+        .demo-node.agent { background: var(--langgraph-blue); }
+        .demo-node.tool { background: var(--langgraph-green); }
+        .demo-node.output { background: var(--primary-orange); }
+
+        .demo-arrow {
+            color: var(--langgraph-purple);
+            font-size: 1rem;
+        }
+
+        .demo-loop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+            border: 2px dashed var(--langgraph-green);
+            border-radius: 12px;
+            padding: 8px;
+        }
+
+        .demo-loop-label {
+            font-size: 0.7rem;
+            color: var(--langgraph-green);
+            font-weight: 600;
+        }
+
+        /* Key Features */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Use Cases */
+        .use-case-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .use-case-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .use-case-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .use-case-icon.chat { background: var(--langgraph-blue); }
+        .use-case-icon.workflow { background: var(--langgraph-green); }
+        .use-case-icon.agent { background: var(--langgraph-purple); }
+        .use-case-icon.research { background: var(--primary-orange); }
+
+        .use-case-content h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .use-case-content p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Comparison Table */
+        .comparison-mini {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            margin: 20px 0;
+        }
+
+        .comparison-mini table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .comparison-mini th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .comparison-mini td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-mini tr:last-child td {
+            border-bottom: none;
+        }
+
+        .check { color: var(--langgraph-green); }
+        .cross { color: #dc2626; }
+        .partial { color: var(--primary-orange); }
+
+        /* Quick Start */
+        .quick-start-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .quick-start-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-start-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin: 12px 0;
+        }
+
+        .step-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--langgraph-purple);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .step-content strong {
+            color: var(--text-primary);
+        }
+
+        /* Summary */
+        .summary-box {
+            background: linear-gradient(135deg, #faf5ff, #f0fdf4);
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--langgraph-purple);
+        }
+
+        .summary-points {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .summary-point {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .summary-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .summary-icon.state { background: var(--langgraph-purple); }
+        .summary-icon.node { background: var(--langgraph-blue); }
+        .summary-icon.edge { background: var(--langgraph-green); }
+        .summary-icon.graph { background: var(--primary-orange); }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 32px 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 64px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .main {
+                padding: 80px 16px 48px;
+            }
+
+            .concept-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .what-is-box {
+                flex-direction: column;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-flow {
+                flex-direction: column;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Pulse animation for nodes */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .graph-node:hover {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">RL Learning</a>
+            <ul class="nav-links">
+                <li><a href="index.html">RL演进</a></li>
+                <li><a href="parallel.html">并行策略</a></li>
+                <li><a href="langgraph.html" class="active">LangGraph</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <header class="hero">
+            <h1>LangGraph 教程</h1>
+            <p class="hero-subtitle">构建有状态的、多步骤的AI应用——用图结构编排Agent工作流，一目了然的核心概念与实践指南</p>
+            <span class="hero-tagline">LangChain生态 · 状态驱动 · 循环可控</span>
+        </header>
+
+        <!-- What is LangGraph -->
+        <section class="section">
+            <h2 class="section-title purple">LangGraph 是什么？</h2>
+
+            <div class="intro-box">
+                <p><strong>一句话定义</strong>：LangGraph 是一个用于构建<strong>有状态的、多Actor</strong>的LLM应用的框架。它用<strong>图结构</strong>（节点+边）来定义AI应用的执行流程。</p>
+                <p><strong>为什么需要它</strong>：传统Agent是线性执行（A→B→C→结束）。但现实应用需要<strong>循环</strong>（反复调用工具）、<strong>分支</strong>（根据条件走不同路径）、<strong>状态记忆</strong>（记住上下文）。LangGraph正是为此而生。</p>
+            </div>
+
+            <div class="what-is-box">
+                <div class="what-is-card">
+                    <div class="icon">🔄</div>
+                    <h3>有状态</h3>
+                    <p>状态贯穿整个流程，节点可读写状态。支持持久化，可中断恢复。</p>
+                </div>
+                <div class="what-is-card">
+                    <div class="icon">🔀</div>
+                    <h3>可循环</h3>
+                    <p>不像DAG只能单向流动，LangGraph支持循环边。Agent可反复执行直到满意。</p>
+                </div>
+                <div class="what-is-card">
+                    <div class="icon">👥</div>
+                    <h3>多Actor</h3>
+                    <p>多个Agent/工具作为节点协作。每个节点专注自己的任务，状态共享。</p>
+                </div>
+            </div>
+
+            <div class="metaphor-box">
+                <span class="metaphor-icon">💡</span> <strong>形象比喻</strong>：想象一个<strong>工厂流水线</strong>，但有智能质检员。质检员可以决定："这个产品不合格，送回上一个工位重新处理"。这就是LangGraph的<strong>循环+条件分支</strong>能力。每个工位（节点）都能看到当前产品的状态（共享State）。
+            </div>
+        </section>
+
+        <!-- Core Concepts -->
+        <section id="concepts" class="section">
+            <h2 class="section-title blue">四大核心概念</h2>
+            <div class="concept-grid">
+                <!-- State -->
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge state">S</div>
+                        <div class="concept-name">State（状态）</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>状态是<strong>贯穿整个图的数据容器</strong>，每个节点都可以读取和更新它。</p>
+                        <p>就像一个"共享笔记本"，所有节点都看得到当前进度和中间结果。</p>
+                    </div>
+
+                    <div class="diagram-box">
+                        <div class="diagram-title">State 结构示意</div>
+                        <div class="state-box">
+                            <div class="state-header">📋 TypedDict State</div>
+                            <div class="state-fields">
+                                <div class="state-field">
+                                    <span class="field-name">messages</span>
+                                    <span class="field-value">[用户问题, Agent回复, 工具调用...]</span>
+                                </div>
+                                <div class="state-field">
+                                    <span class="field-name">next_action</span>
+                                    <span class="field-value">"use_tool" / "respond" / "end"</span>
+                                </div>
+                                <div class="state-field">
+                                    <span class="field-name">tool_output</span>
+                                    <span class="field-value">工具返回的结果数据</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-box">
+                        <pre><span class="keyword">class</span> <span class="class">State</span>(TypedDict):
+    <span class="field-name">messages</span>: Annotated[list, add_messages]
+    <span class="field-name">next</span>: str  <span class="comment"># 下一步去哪个节点</span></pre>
+                    </div>
+                </div>
+
+                <!-- Node -->
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge node">N</div>
+                        <div class="concept-name">Node（节点）</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>节点是<strong>执行具体任务的函数</strong>。接收State，处理后返回更新后的State。</p>
+                        <p>可以是：LLM调用、工具执行、人工介入、条件判断...</p>
+                    </div>
+
+                    <div class="diagram-box">
+                        <div class="diagram-title">节点工作原理</div>
+                        <div class="graph-flow">
+                            <div class="graph-row">
+                                <div class="state-box" style="padding:8px 12px;font-size:0.8rem;">
+                                    <span style="color:var(--langgraph-purple);font-weight:600;">State 进</span>
+                                </div>
+                                <span class="graph-arrow">→</span>
+                                <div class="graph-node process" style="width:100px;height:50px;">
+                                    <span class="node-label">agent_node()</span>
+                                </div>
+                                <span class="graph-arrow">→</span>
+                                <div class="state-box" style="padding:8px 12px;font-size:0.8rem;">
+                                    <span style="color:var(--langgraph-purple);font-weight:600;">State 出</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-box">
+                        <pre><span class="keyword">def</span> <span class="function">agent_node</span>(state: State) -> State:
+    response = model.invoke(state["messages"])
+    state["messages"].append(response)
+    <span class="keyword">return</span> state</pre>
+                    </div>
+                </div>
+
+                <!-- Edge -->
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge edge">E</div>
+                        <div class="concept-name">Edge（边）</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>边定义<strong>节点之间的流转路径</strong>。可以是固定路径，也可以是条件分支。</p>
+                        <p><strong>普通边</strong>：A → B（固定）<br><strong>条件边</strong>：A → 根据State决定去B还是C</p>
+                    </div>
+
+                    <div class="diagram-box">
+                        <div class="diagram-title">条件边示意</div>
+                        <div class="graph-container">
+                            <div class="graph-node process" style="margin-right:20px;">
+                                <span class="node-icon">🤖</span>
+                                <span class="node-label">Agent</span>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:8px;margin-right:20px;">
+                                <div class="graph-arrow cond">
+                                    <span style="font-size:0.6rem;color:var(--langgraph-green);">需要工具?</span>
+                                    <span class="arrow-line">→</span>
+                                </div>
+                                <div class="graph-arrow cond">
+                                    <span style="font-size:0.6rem;color:var(--langgraph-blue);">直接回答?</span>
+                                    <span class="arrow-line">→</span>
+                                </div>
+                            </div>
+                            <div style="display:flex;flex-direction:column;gap:16px;">
+                                <div class="graph-node decision">
+                                    <span class="node-icon">🔧</span>
+                                    <span class="node-label">Tool</span>
+                                </div>
+                                <div class="graph-node end">
+                                    <span class="node-icon">✅</span>
+                                    <span class="node-label">End</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-box">
+                        <pre><span class="comment"># 条件边：根据State决定下一步</span>
+graph.add_conditional_edges(
+    "agent",
+    <span class="function">should_continue</span>,  <span class="comment"># 判断函数</span>
+    {"tool": "tool_node", "end": END}
+)</pre>
+                    </div>
+                </div>
+
+                <!-- Graph -->
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge graph">G</div>
+                        <div class="concept-name">Graph（图）</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>图是<strong>整个应用的骨架</strong>：定义所有节点和边，指定入口点。</p>
+                        <p>编译后可以执行，支持<strong>持久化</strong>（保存执行状态）和<strong>人工介入</strong>。</p>
+                    </div>
+
+                    <div class="diagram-box">
+                        <div class="diagram-title">完整的Graph结构</div>
+                        <div class="graph-flow">
+                            <div class="graph-row">
+                                <div class="graph-node start">
+                                    <span class="node-icon">🚀</span>
+                                    <span class="node-label">START</span>
+                                </div>
+                                <span class="graph-arrow">→</span>
+                                <div class="graph-node process">
+                                    <span class="node-icon">🤖</span>
+                                    <span class="node-label">Agent</span>
+                                </div>
+                            </div>
+                            <span class="graph-arrow down">↓</span>
+                            <div class="graph-row">
+                                <div class="graph-node decision">
+                                    <span class="node-icon">🔧</span>
+                                    <span class="node-label">Tool</span>
+                                </div>
+                                <span class="graph-arrow" style="color:var(--langgraph-green);">↺</span>
+                                <div style="font-size:0.7rem;color:var(--langgraph-green);">循环回Agent</div>
+                            </div>
+                            <span class="graph-arrow down">↓</span>
+                            <div class="graph-node end">
+                                <span class="node-icon">✅</span>
+                                <span class="node-label">END</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-box">
+                        <pre>graph = StateGraph(State)
+graph.add_node("agent", agent_node)
+graph.add_node("tool", tool_node)
+graph.set_entry_point("agent")
+graph = graph.compile()</pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Demo -->
+        <section class="section">
+            <h2 class="section-title green">典型应用：Agent + 工具循环</h2>
+
+            <div class="interactive-demo">
+                <div class="demo-title">🔥 ReAct风格的Agent工作流</div>
+                <div class="demo-graph">
+                    <div class="demo-flow">
+                        <div class="demo-node input">用户问题</div>
+                        <span class="demo-arrow">→</span>
+                        <div class="demo-node agent">LLM Agent</div>
+                        <div class="demo-loop">
+                            <span class="demo-loop-label">🔄 循环直到满意</span>
+                            <span class="demo-arrow">↓</span>
+                            <div class="demo-node tool">调用工具</div>
+                            <span class="demo-arrow">↓</span>
+                            <div class="demo-node agent" style="background:#60a5fa;">反思结果</div>
+                            <span class="demo-arrow">↑</span>
+                        </div>
+                        <span class="demo-arrow">→</span>
+                        <div class="demo-node output">最终答案</div>
+                    </div>
+                </div>
+                <p style="text-align:center;color:var(--text-secondary);font-size:0.85rem;margin-top:16px;">
+                    Agent思考 → 需要工具？ → 调用 → 获得结果 → 继续思考 → ... → 产出答案
+                </p>
+            </div>
+
+            <div class="code-box" style="margin-top:20px;">
+                <pre><span class="comment"># 最小示例：Agent + 工具循环</span>
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, END
+
+<span class="keyword">def</span> <span class="function">should_continue</span>(state):
+    <span class="keyword">return</span> "tool" <span class="keyword">if</span> state["need_tool"] <span class="keyword">else</span> END
+
+graph = StateGraph(State)
+graph.add_node("agent", call_model)
+graph.add_node("tool", call_tool)
+graph.add_conditional_edges("agent", should_continue)
+graph.add_edge("tool", "agent")  <span class="comment"># 循环！</span>
+graph.set_entry_point("agent")
+app = graph.compile()</pre>
+            </div>
+        </section>
+
+        <!-- Key Features -->
+        <section class="section">
+            <h2 class="section-title orange">LangGraph 的核心优势</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">💾</div>
+                    <h4>持久化 & 恢复</h4>
+                    <p>执行可暂停保存，随时恢复继续。适合需要人工确认的场景。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h4>人机协作</h4>
+                    <p>在特定节点暂停，等待人工输入后继续。human-in-the-loop轻松实现。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h4>可视化调试</h4>
+                    <p>图结构天然可视化。Mermaid/LangSmith展示执行路径一目了然。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h4>流控可控</h4>
+                    <p>不像纯LLM自由发挥，每个步骤都可控。审计友好，可追溯。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧩</div>
+                    <h4>模块化</h4>
+                    <p>每个节点职责清晰。可复用、可替换、可测试。工程友好。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h4>支持流式</h4>
+                    <p>执行过程中可流式输出中间结果。用户体验更流畅。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison -->
+        <section class="section">
+            <h2 class="section-title blue">vs 其他方案</h2>
+            <div class="comparison-mini">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>特性</th>
+                            <th>LangGraph</th>
+                            <th>纯LangChain Agent</th>
+                            <th>DAG框架</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>循环执行</td>
+                            <td><span class="check">✓ 完全支持</span></td>
+                            <td><span class="check">✓ 支持</span></td>
+                            <td><span class="cross">✗ 不支持</span></td>
+                        </tr>
+                        <tr>
+                            <td>条件分支</td>
+                            <td><span class="check">✓ 原生支持</span></td>
+                            <td><span class="partial">△ 隐式</span></td>
+                            <td><span class="check">✓ 支持</span></td>
+                        </tr>
+                        <tr>
+                            <td>状态持久化</td>
+                            <td><span class="check">✓ 原生支持</span></td>
+                            <td><span class="cross">✗ 不支持</span></td>
+                            <td><span class="partial">△ 需自建</span></td>
+                        </tr>
+                        <tr>
+                            <td>人工介入</td>
+                            <td><span class="check">✓ 一行代码</span></td>
+                            <td><span class="cross">✗ 困难</span></td>
+                            <td><span class="partial">△ 需自建</span></td>
+                        </tr>
+                        <tr>
+                            <td>可视化调试</td>
+                            <td><span class="check">✓ 天然友好</span></td>
+                            <td><span class="partial">△ 有限</span></td>
+                            <td><span class="check">✓ 支持</span></td>
+                        </tr>
+                        <tr>
+                            <td>多Agent协作</td>
+                            <td><span class="check">✓ 天然支持</span></td>
+                            <td><span class="partial">△ 需手动</span></td>
+                            <td><span class="cross">✗ 不支持</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Use Cases -->
+        <section class="section">
+            <h2 class="section-title green">典型应用场景</h2>
+            <div class="use-case-list">
+                <div class="use-case-item">
+                    <div class="use-case-icon chat">💬</div>
+                    <div class="use-case-content">
+                        <h4>多轮对话 Agent</h4>
+                        <p>对话历史作为State，Agent可根据上下文决定调用工具或直接回复。支持打断后恢复。</p>
+                    </div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-icon workflow">⚙️</div>
+                    <div class="use-case-content">
+                        <h4>复杂工作流编排</h4>
+                        <p>如报销审批：提交 → AI初审 → 人工确认 → 自动执行 → 完成。每步状态清晰。</p>
+                    </div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-icon agent">🤖</div>
+                    <div class="use-case-content">
+                        <h4>多Agent协作系统</h4>
+                        <p>研究员Agent + 写手Agent + 编辑Agent。共享State，分工协作完成报告。</p>
+                    </div>
+                </div>
+                <div class="use-case-item">
+                    <div class="use-case-icon research">🔬</div>
+                    <div class="use-case-content">
+                        <h4>自主研究Agent</h4>
+                        <p>搜索 → 阅读 → 总结 → 发现不足 → 继续搜索 → ... 循环直到研究充分。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Start -->
+        <section class="section">
+            <h2 class="section-title purple">30秒上手</h2>
+            <div class="quick-start-box">
+                <div class="quick-start-title">
+                    <span style="font-size:1.5rem;">⚡</span> 最小代码实现一个Agent循环
+                </div>
+                <div class="quick-start-step">
+                    <span class="step-num">1</span>
+                    <div class="step-content"><strong>定义State</strong>：用什么数据贯穿流程？（如messages列表）</div>
+                </div>
+                <div class="quick-start-step">
+                    <span class="step-num">2</span>
+                    <div class="step-content"><strong>创建节点</strong>：agent节点（调用LLM）、tool节点（执行工具）</div>
+                </div>
+                <div class="quick-start-step">
+                    <span class="step-num">3</span>
+                    <div class="step-content"><strong>连接边</strong>：agent → 条件判断 → tool 或 END；tool → agent（循环）</div>
+                </div>
+                <div class="quick-start-step">
+                    <span class="step-num">4</span>
+                    <div class="step-content"><strong>编译执行</strong>：graph.compile() → app.invoke(input)</div>
+                </div>
+            </div>
+
+            <div class="code-box">
+                <pre><span class="comment"># 完整最小示例</span>
+<span class="keyword">from</span> langgraph.graph <span class="keyword">import</span> StateGraph, MessagesState, END
+<span class="keyword">from</span> langgraph.prebuilt <span class="keyword">import</span> ToolNode
+
+<span class="comment"># 1. State已内置：MessagesState</span>
+
+<span class="comment"># 2. 节点</span>
+<span class="keyword">def</span> <span class="function">agent</span>(state):
+    response = model.invoke(state["messages"])
+    <span class="keyword">return</span> {"messages": [response]}
+
+<span class="comment"># 3. 构建图</span>
+graph = StateGraph(MessagesState)
+graph.add_node("agent", agent)
+graph.add_node("tools", ToolNode(tools))
+graph.add_conditional_edges("agent", <span class="function">route</span>)
+graph.add_edge("tools", "agent")  <span class="comment"># 循环</span>
+
+<span class="comment"># 4. 执行</span>
+app = graph.compile()
+result = app.invoke({"messages": ["你好"]})</pre>
+            </div>
+        </section>
+
+        <!-- Summary -->
+        <section class="section">
+            <h2 class="section-title purple">核心要点总结</h2>
+            <div class="summary-box">
+                <div class="summary-title">一句话记住LangGraph</div>
+                <div class="summary-points">
+                    <div class="summary-point">
+                        <span class="summary-icon state">S</span>
+                        <span><strong>State</strong> = 共享笔记本，所有节点都能读写</span>
+                    </div>
+                    <div class="summary-point">
+                        <span class="summary-icon node">N</span>
+                        <span><strong>Node</strong> = 工位，执行具体任务，处理State</span>
+                    </div>
+                    <div class="summary-point">
+                        <span class="summary-icon edge">E</span>
+                        <span><strong>Edge</strong> = 传送带，可以是固定路径或条件分支，<strong>还能循环！</strong></span>
+                    </div>
+                    <div class="summary-point">
+                        <span class="summary-icon graph">G</span>
+                        <span><strong>Graph</strong> = 整个工厂，编译后运行，支持暂停/恢复/人工介入</span>
+                    </div>
+                </div>
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-color);">
+                    <p style="font-size:0.95rem;color:var(--text-secondary);">
+                        <strong>一句话</strong>：LangGraph让你用<strong>图结构</strong>（节点+边）构建<strong>有状态的、可循环的</strong>AI应用，比传统Agent更可控、更可追溯、更适合工程落地。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="index.html">← RL演进</a>
+                <a href="parallel.html">并行策略</a>
+                <a href="langgraph.html">LangGraph</a>
+            </div>
+            <p>LangGraph学习教程 · 内容整理自官方文档与实践经验</p>
+        </footer>
+    </main>
+
+    <script>
+        // Render math with KaTeX
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // Smooth scroll for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
