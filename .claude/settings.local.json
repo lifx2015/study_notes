@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:traehello-agents-aicookbookt5mr.vercel.app)",
+      "Bash(curl -sL \"https://traehello-agents-aicookbookt5mr.vercel.app/chapter11/%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0-Agentic-RL.html\")",
+      "Bash(curl -v -L \"https://traehello-agents-aicookbookt5mr.vercel.app/chapter11/%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0-Agentic-RL.html\")",
+      "WebSearch",
+      "Bash(curl -sL --connect-timeout 10 \"https://github.com/traehello/agents\")",
+      "Bash(curl -sL --connect-timeout 15 \"https://api.github.com/search/repositories?q=aicookbook+agentic\")",
+      "Bash(curl -sL \"https://api.github.com/repos/HeteroCat/hello-agents-aicookbook/contents/\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(f'{item[\\\\\"name\\\\\"]:40s} {item[\\\\\"type\\\\\"]}'\\) for item in data]\")",
+      "Bash(curl -sL \"https://api.github.com/repos/HeteroCat/hello-agents-aicookbook/contents/chapter11\")",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); [print\\(f'{item[\\\\\"name\\\\\"]:60s} {item[\\\\\"type\\\\\"]:5s} {item.get\\(\\\\\"size\\\\\",0\\)}'\\) for item in data]\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/HeteroCat/hello-agents-aicookbook/main/chapter11/%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0-Agentic-RL.md\" -o /tmp/agentic_rl_chapter11.md)",
+      "Bash(curl -sL --connect-timeout 20 \"https://raw.githubusercontent.com/HeteroCat/hello-agents-aicookbook/main/chapter11/%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0-Agentic-RL.md\" -o /tmp/agentic_rl_chapter11.md)",
+      "Bash(echo \"Exit: $?\")",
+      "Bash(curl -v -L --connect-timeout 20 \"https://raw.githubusercontent.com/HeteroCat/hello-agents-aicookbook/main/chapter11/%E7%AC%AC%E5%8D%81%E4%B8%80%E7%AB%A0-Agentic-RL.md\")",
+      "Bash(curl -sL --connect-timeout 20 \"https://api.github.com/repos/HeteroCat/hello-agents-aicookbook/git/blobs/3b4c202e6dbc88839c7d0639f87ac08cf2439133\")",
+      "Bash(curl -sL --connect-timeout 30 \"https://api.github.com/repos/HeteroCat/hello-agents-aicookbook/git/blobs/3b4c202e6dbc88839c7d0639f87ac08cf2439133\")",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -sL --connect-timeout 30 \"https://api.github.com/repos/HeteroCat/hello-agents-aicookbook/git/blobs/3b4c202e6dbc88839c7d0639f87ac08cf2439133\" -o /tmp/blob_response.json)"
+    ]
+  }
+}

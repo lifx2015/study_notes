@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic RL：基于强化学习的智能体训练</title>
+    <!-- KaTeX for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #2563eb;
+            --primary-green: #059669;
+            --primary-purple: #7c3aed;
+            --primary-orange: #ea580c;
+            --primary-teal: #0d9488;
+            --primary-pink: #db2777;
+            --langgraph-blue: #3b82f6;
+            --langgraph-green: #10b981;
+            --langgraph-purple: #8b5cf6;
+            --bg-color: #fafafa;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+        }
+
+        .nav-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-blue);
+            background: #f0f9ff;
+        }
+
+        .nav-links a.active {
+            color: var(--primary-blue);
+            background: #eff6ff;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 100px 24px 64px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 48px 0 64px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 48px;
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary-pink), var(--primary-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .hero-tagline {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #fdf2f8, #f0fdfa);
+            border: 1px solid #fce7f3;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--primary-pink);
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 64px;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .section-title.blue { border-color: var(--primary-blue); }
+        .section-title.green { border-color: var(--primary-green); }
+        .section-title.purple { border-color: var(--primary-purple); }
+        .section-title.orange { border-color: var(--primary-orange); }
+        .section-title.teal { border-color: var(--primary-teal); }
+        .section-title.pink { border-color: var(--primary-pink); }
+
+        /* Introduction Box */
+        .intro-box {
+            background: linear-gradient(135deg, #fdf2f8, #f0f9ff);
+            border: 1px solid #fce7f3;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .intro-box p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .intro-box p:last-child {
+            margin-bottom: 0;
+        }
+
+        /* What is Card */
+        .what-is-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 32px;
+        }
+
+        .what-is-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .what-is-card h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .what-is-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        /* What is Box (multi-card layout) */
+        .what-is-box {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .what-is-box .what-is-card {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        /* Core Question */
+        .core-question {
+            background: linear-gradient(135deg, #eff6ff, #faf5ff);
+            border: 1px solid #e0e7ff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .core-question h3 {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        .core-question p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Formula Box */
+        .formula-box {
+            background: #f8fafc;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            text-align: center;
+        }
+
+        .formula-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        /* Concept Grid */
+        .concept-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        .concept-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .concept-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .concept-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .concept-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .concept-badge.reasoning { background: var(--primary-blue); }
+        .concept-badge.tool { background: var(--primary-green); }
+        .concept-badge.memory { background: var(--primary-purple); }
+        .concept-badge.planning { background: var(--primary-orange); }
+        .concept-badge.self-improve { background: var(--primary-teal); }
+        .concept-badge.perception { background: var(--primary-pink); }
+
+        .concept-name {
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .concept-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.7;
+        }
+
+        /* Comparison Table */
+        .comparison-mini {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            margin: 20px 0;
+        }
+
+        .comparison-mini table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .comparison-mini th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .comparison-mini td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .comparison-mini tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-mini tr:hover {
+            background: #f9fafb;
+        }
+
+        .highlight-blue { color: var(--primary-blue); font-weight: 600; }
+        .highlight-pink { color: var(--primary-pink); font-weight: 600; }
+
+        /* Code Box */
+        .code-box {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+
+        .code-box pre {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+        }
+
+        .code-box .keyword { color: #c084fc; }
+        .code-box .string { color: #86efac; }
+        .code-box .comment { color: #94a3b8; }
+        .code-box .function { color: #60a5fa; }
+        .code-box .class { color: #fbbf24; }
+
+        /* Phase Flow */
+        .phase-flow {
+            display: flex;
+            align-items: stretch;
+            gap: 12px;
+            margin: 24px 0;
+        }
+
+        .phase-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+        }
+
+        .phase-card .phase-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+
+        .phase-num.step1 { background: var(--primary-blue); }
+        .phase-num.step2 { background: var(--primary-green); }
+        .phase-num.step3 { background: var(--primary-purple); }
+
+        .phase-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .phase-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .phase-arrow {
+            display: flex;
+            align-items: center;
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+
+        /* Reward Cards (3 columns) */
+        .reward-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 24px 0;
+        }
+
+        .reward-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .reward-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .reward-card .reward-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .reward-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .reward-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Comparison Card */
+        .compare-box {
+            display: flex;
+            gap: 20px;
+            margin: 24px 0;
+        }
+
+        .compare-side {
+            flex: 1;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .compare-side.ppo {
+            border: 2px solid #fca5a5;
+            background: #fff5f5;
+        }
+
+        .compare-side.grpo {
+            border: 2px solid #86efac;
+            background: #f0fdf4;
+        }
+
+        .compare-side h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .compare-side.ppo h4 { color: #dc2626; }
+        .compare-side.grpo h4 { color: var(--primary-green); }
+
+        .compare-side ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .compare-side ul li {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .compare-side ul li:last-child {
+            border-bottom: none;
+        }
+
+        .compare-side ul li .icon {
+            flex-shrink: 0;
+        }
+
+        /* Pipeline Flow */
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin: 24px 0;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-step {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .pipeline-step.s1 { background: var(--primary-blue); }
+        .pipeline-step.s2 { background: var(--primary-green); }
+        .pipeline-step.s3 { background: var(--primary-purple); }
+        .pipeline-step.s4 { background: var(--primary-teal); }
+        .pipeline-step.s5 { background: var(--primary-orange); }
+        .pipeline-step.s6 { background: var(--primary-pink); }
+
+        .pipeline-arrow {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        /* Metric Cards */
+        .metric-group {
+            margin-bottom: 24px;
+        }
+
+        .metric-group h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .metric-items {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .metric-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-item strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .metric-item span {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, #fdf2f8, #f0fdfa);
+            border: 1px solid #fce7f3;
+            border-radius: 12px;
+            padding: 32px;
+        }
+
+        .summary-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary-pink);
+        }
+
+        .logic-chain {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .logic-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .logic-arrow {
+            color: var(--primary-pink);
+            font-size: 1.25rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .logic-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .logic-text strong {
+            color: var(--text-primary);
+        }
+
+        /* Info box */
+        .info-box {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
+            font-size: 0.9rem;
+        }
+
+        .info-box .info-label {
+            font-weight: 600;
+            color: var(--primary-green);
+            margin-bottom: 4px;
+        }
+
+        .info-box p {
+            color: var(--text-secondary);
+        }
+
+        /* RLHF vs RLAIF */
+        .distinction-box {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .distinction-card {
+            flex: 1;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .distinction-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .distinction-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .distinction-card.rlhf { border-left: 4px solid var(--primary-blue); }
+        .distinction-card.rlaif { border-left: 4px solid var(--primary-teal); }
+
+        /* Combination Strategy */
+        .combo-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .combo-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .combo-item .combo-label {
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .combo-label.c1 { background: var(--primary-blue); }
+        .combo-label.c2 { background: var(--primary-teal); }
+        .combo-label.c3 { background: var(--primary-pink); }
+
+        .combo-item span {
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 32px 0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 64px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-blue);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+
+            .main {
+                padding: 80px 16px 48px;
+            }
+
+            .concept-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .what-is-box {
+                flex-direction: column;
+            }
+
+            .phase-flow {
+                flex-direction: column;
+            }
+
+            .phase-arrow {
+                justify-content: center;
+                transform: rotate(90deg);
+            }
+
+            .reward-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .compare-box {
+                flex-direction: column;
+            }
+
+            .distinction-box {
+                flex-direction: column;
+            }
+
+            .pipeline-flow {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .pipeline-arrow {
+                transform: rotate(90deg);
+            }
+
+            .metric-items {
+                flex-direction: column;
+            }
+        }
+
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* Pulse animation */
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .concept-card:hover .concept-badge {
+            animation: pulse 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="index.html" class="nav-logo">RL Learning</a>
+            <ul class="nav-links">
+                <li><a href="index.html">RL演进</a></li>
+                <li><a href="parallel.html">并行策略</a></li>
+                <li><a href="langgraph.html">LangGraph</a></li>
+                <li><a href="agentic_rl.html" class="active">Agentic RL</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main">
+        <header class="hero">
+            <h1>Agentic RL</h1>
+            <p class="hero-subtitle">基于强化学习的智能体训练——将 LLM 作为可学习策略，嵌入感知-决策-执行循环，通过 RL 优化多步任务表现</p>
+            <span class="hero-tagline">LLM as Policy · 多步决策 · 奖励驱动</span>
+        </header>
+
+        <!-- Section 1: 从 LLM 训练到 Agentic RL -->
+        <section class="section">
+            <h2 class="section-title blue">从 LLM 训练到 Agentic RL</h2>
+
+            <div class="core-question">
+                <h3>核心问题：如何让智能体具备更强的推理能力?</h3>
+                <p>传统 LLM 训练关注单步对话优化，而智能体需要多步序贯决策——Agentic RL 正是为此而生</p>
+            </div>
+
+            <div class="what-is-card">
+                <div class="icon">🤖</div>
+                <h3>Agentic RL 定义</h3>
+                <p>将 LLM 作为可学习策略 $\pi_\theta(a|s)$，嵌入智能体的感知-决策-执行循环，通过强化学习优化多步任务表现。与传统的单步对话优化不同，Agentic RL 将智能体交互过程建模为马尔可夫决策过程（MDP），目标是最大化累积折扣奖励。</p>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">PBRFT vs Agentic RL：MDP 框架对比</h3>
+            <div class="comparison-mini">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>维度</th>
+                            <th>PBRFT（传统对齐）</th>
+                            <th>Agentic RL（智能体对齐）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>决策模式</strong></td>
+                            <td><span class="highlight-blue">单步对话优化</span></td>
+                            <td><span class="highlight-pink">多步序贯决策</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>状态空间</strong></td>
+                            <td>状态 = 固定 prompt</td>
+                            <td>状态 = 动态演化的环境观测</td>
+                        </tr>
+                        <tr>
+                            <td><strong>行动空间</strong></td>
+                            <td>文本生成</td>
+                            <td>文本 + 工具调用 + 环境操作</td>
+                        </tr>
+                        <tr>
+                            <td><strong>奖励信号</strong></td>
+                            <td>单步奖励 $r(s_0, y)$</td>
+                            <td>累积折扣奖励 $\sum_{t} \gamma^t r(s_t, a_t)$</td>
+                        </tr>
+                        <tr>
+                            <td><strong>优化目标</strong></td>
+                            <td>单轮回复质量</td>
+                            <td>长期任务完成度</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:24px 0 12px;">核心公式对比</h3>
+            <div class="formula-box">
+                <div class="formula-label">PBRFT 目标</div>
+                $$J_{\text{PBRFT}}(\theta) = \mathbb{E}_{s_0, y \sim \pi_\theta} [r(s_0, y)]$$
+            </div>
+            <div class="formula-box">
+                <div class="formula-label">Agentic RL 目标</div>
+                $$J_{\text{Agentic}}(\theta) = \mathbb{E}_{\tau \sim \pi_\theta} \left[\sum_{t=0}^{T} \gamma^t r(s_t, a_t)\right]$$
+            </div>
+        </section>
+
+        <!-- Section 2: LLM 训练全景图 -->
+        <section class="section">
+            <h2 class="section-title green">LLM 训练全景图</h2>
+
+            <div class="intro-box">
+                <p><strong>两阶段范式</strong>：LLM 的训练分为<strong>预训练</strong>和<strong>后训练</strong>两个阶段。预训练赋予模型语言能力，后训练让模型学会遵循指令、与人类对齐。</p>
+            </div>
+
+            <h3 style="font-size:1.15rem;font-weight:600;margin-bottom:16px;">预训练：Causal Language Modeling</h3>
+            <p style="color:var(--text-secondary);margin-bottom:12px;">通过自回归方式学习语言的统计规律，预测下一个 token：</p>
+            <div class="formula-box">
+                <div class="formula-label">预训练损失</div>
+                $$\mathcal{L}_{\text{pretrain}} = -\sum_{t=1}^{T} \log P(x_t | x_1, ..., x_{t-1}; \theta)$$
+            </div>
+
+            <h3 style="font-size:1.15rem;font-weight:600;margin:32px 0 16px;">后训练三步骤</h3>
+            <div class="phase-flow">
+                <div class="phase-card">
+                    <div class="phase-num step1">1</div>
+                    <h4>SFT 监督微调</h4>
+                    <p>教会模型遵循指令格式，学习基本推理能力</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        <div class="formula-label">SFT 损失</div>
+                        $$\mathcal{L}_{\text{SFT}} = -\sum_{i=1}^{N} \log P(y_i | x_i; \theta)$$
+                    </div>
+                </div>
+                <div class="phase-arrow">→</div>
+                <div class="phase-card">
+                    <div class="phase-num step2">2</div>
+                    <h4>奖励建模 (RM)</h4>
+                    <p>学习人类偏好，训练打分模型</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        <div class="formula-label">Bradley-Terry 损失</div>
+                        $$\mathcal{L}_{\text{RM}} = -\mathbb{E}_{(x, y_w, y_l)} [\log \sigma(r_\phi(x, y_w) - r_\phi(x, y_l))]$$
+                    </div>
+                </div>
+                <div class="phase-arrow">→</div>
+                <div class="phase-card">
+                    <div class="phase-num step3">3</div>
+                    <h4>RL 微调 (PPO)</h4>
+                    <p>用 RL 最大化奖励，同时约束不偏离参考策略</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        <div class="formula-label">PPO 损失</div>
+                        $$\mathcal{L}_{\text{PPO}} = \mathbb{E}_{x, y \sim \pi_\theta} [r_\phi(x, y)] - \beta \cdot D_{KL}(\pi_\theta || \pi_{\text{ref}})$$
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:28px 0 12px;">RLHF vs RLAIF</h3>
+            <div class="distinction-box">
+                <div class="distinction-card rlhf">
+                    <h4>RLHF（人类反馈）</h4>
+                    <p>奖励模型从<strong>人类标注</strong>的偏好对 $(y_w, y_l)$ 中学习。优点：直接反映人类价值观。缺点：标注成本高、一致性难保证、扩展性受限。</p>
+                </div>
+                <div class="distinction-card rlaif">
+                    <h4>RLAIF（AI 反馈）</h4>
+                    <p>奖励模型从<strong>AI（如 GPT-4）</strong>生成的偏好对中学习。优点：可扩展、成本低、一致性好。缺点：可能继承 AI 的偏见、信号质量受限于 AI 能力。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Agentic RL 六大核心能力 -->
+        <section class="section">
+            <h2 class="section-title purple">Agentic RL 六大核心能力</h2>
+
+            <p style="color:var(--text-secondary);margin-bottom:24px;">Agentic RL 使 LLM 从"被动生成器"进化为"主动决策者"，赋予六大核心能力：</p>
+
+            <div class="concept-grid">
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge reasoning">R</div>
+                        <div class="concept-name">推理 (Reasoning)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>通过试错学习有效推理策略，<strong>发现训练数据中没有的推理路径</strong>。不再是简单模仿人类思维链，而是能够自主探索更优的解题路径。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-blue);">关键：探索 vs 利用的平衡</p>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge tool">T</div>
+                        <div class="concept-name">工具使用 (Tool Use)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>学会<strong>何时</strong>使用工具、选择<strong>哪个</strong>工具、<strong>如何组合</strong>多个工具。从"什么都自己算"进化为"善用外力"。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-green);">关键：工具选择的时机与组合策略</p>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge memory">M</div>
+                        <div class="concept-name">记忆 (Memory)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>决定<strong>哪些信息值得记住</strong>、<strong>何时更新记忆</strong>、<strong>何时删除过时信息</strong>。有效记忆管理是长期任务成功的关键。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-purple);">关键：记忆的存取与遗忘策略</p>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge planning">P</div>
+                        <div class="concept-name">规划 (Planning)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>通过试错发现有效的行动序列，学会<strong>权衡短期和长期收益</strong>。不是简单的前向搜索，而是动态调整计划。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-orange);">关键：短期收益 vs 长期回报的权衡</p>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge self-improve">S</div>
+                        <div class="concept-name">自我改进 (Self-Improvement)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p><strong>识别自己的错误</strong>、分析失败原因、调整策略。这是从"被动接受反馈"到"主动自我优化"的质变。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-teal);">关键：错误检测与策略修正能力</p>
+                    </div>
+                </div>
+
+                <div class="concept-card">
+                    <div class="concept-header">
+                        <div class="concept-badge perception">P</div>
+                        <div class="concept-name">感知 (Perception)</div>
+                    </div>
+                    <div class="concept-desc">
+                        <p>理解多模态信息，<strong>提升视觉推理能力</strong>。从纯文本理解扩展到图像、表格、代码等多模态输入的处理。</p>
+                        <p style="margin-top:8px;font-size:0.85rem;color:var(--primary-pink);">关键：跨模态信息融合与理解</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: 数据集与奖励函数 -->
+        <section class="section">
+            <h2 class="section-title orange">数据集与奖励函数</h2>
+
+            <div class="info-box">
+                <div class="info-label">GSM8K 数据集</div>
+                <p><strong>7,473</strong> 训练样本 + <strong>1,319</strong> 测试样本 | 小学数学应用题，每题需要 <strong>2-8 步推理</strong> | 广泛用于评估 LLM 的数学推理与多步决策能力</p>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:24px 0 16px;">三种奖励函数</h3>
+            <div class="reward-grid">
+                <div class="reward-card">
+                    <div class="reward-icon">1️⃣</div>
+                    <h4>准确率奖励</h4>
+                    <p>最简单直接的奖励信号，判断最终答案是否正确：</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        $$r_{\text{acc}}(a, a^*) = \begin{cases} 1 & \text{if } a = a^* \\ 0 & \text{otherwise} \end{cases}$$
+                    </div>
+                    <p style="margin-top:8px;color:var(--primary-orange);font-size:0.8rem;">特点：简单直接但稀疏，模型难以获得有效梯度信号</p>
+                </div>
+
+                <div class="reward-card">
+                    <div class="reward-icon">2️⃣</div>
+                    <h4>长度惩罚</h4>
+                    <p>在准确率基础上惩罚过长回答，鼓励简洁：</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        $$r_{\text{length}} = r_{\text{acc}} - \alpha \cdot \max(0, l - l_{\text{target}})$$
+                    </div>
+                    <p style="margin-top:8px;color:var(--primary-orange);font-size:0.8rem;">特点：鼓励简洁推理，避免模型生成冗余步骤</p>
+                </div>
+
+                <div class="reward-card">
+                    <div class="reward-icon">3️⃣</div>
+                    <h4>步骤奖励</h4>
+                    <p>为正确的中间推理步骤给予奖励：</p>
+                    <div class="formula-box" style="margin-top:12px;">
+                        $$r_{\text{step}} = r_{\text{acc}} + \beta \cdot s$$
+                    </div>
+                    <p style="margin-top:8px;color:var(--primary-orange);font-size:0.8rem;">特点：鼓励可解释的推理过程，s 为正确步骤占比</p>
+                </div>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:24px 0 12px;">组合策略</h3>
+            <p style="color:var(--text-secondary);margin-bottom:12px;">实际训练中，往往需要组合多种奖励信号来平衡多个优化目标：</p>
+            <div class="combo-list">
+                <div class="combo-item">
+                    <span class="combo-label c1">策略 A</span>
+                    <span>准确率 + 长度惩罚 —— 侧重正确且简洁的回答</span>
+                </div>
+                <div class="combo-item">
+                    <span class="combo-label c2">策略 B</span>
+                    <span>准确率 + 步骤奖励 —— 侧重正确且推理过程可解释</span>
+                </div>
+                <div class="combo-item">
+                    <span class="combo-label c3">策略 C</span>
+                    <span>三者平衡 —— 准确率 + 长度惩罚 + 步骤奖励，全面优化</span>
+                </div>
+            </div>
+
+            <div class="code-box" style="margin-top:16px;">
+                <pre><span class="comment"># 奖励函数组合示例</span>
+<span class="keyword">def</span> <span class="function">combined_reward</span>(answer, target, length, target_len, steps, correct_steps):
+    <span class="comment"># 准确率奖励</span>
+    r_acc = <span class="class">1.0</span> <span class="keyword">if</span> answer == target <span class="keyword">else</span> <span class="class">0.0</span>
+    <span class="comment"># 长度惩罚</span>
+    alpha = <span class="class">0.01</span>
+    r_length = r_acc - alpha * <span class="function">max</span>(<span class="class">0</span>, length - target_len)
+    <span class="comment"># 步骤奖励</span>
+    beta = <span class="class">0.5</span>
+    step_ratio = correct_steps / <span class="function">max</span>(steps, <span class="class">1</span>)
+    r_step = r_acc + beta * step_ratio
+    <span class="keyword">return</span> r_length + r_step - r_acc  <span class="comment"># 避免重复计算 r_acc</span></pre>
+            </div>
+        </section>
+
+        <!-- Section 5: SFT 与 GRPO 训练 -->
+        <section class="section">
+            <h2 class="section-title teal">SFT 与 GRPO 训练</h2>
+
+            <div class="info-box">
+                <div class="info-label">SFT 是基础</div>
+                <p>SFT（监督微调）教会模型任务格式和基本推理能力。没有 SFT 打底，RL 训练会非常不稳定——就像让一个连规则都不懂的新手去参加比赛。</p>
+            </div>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:20px 0 12px;">LoRA：参数高效微调</h3>
+            <p style="color:var(--text-secondary);margin-bottom:12px;">通过低秩分解大幅减少可训练参数，使微调在消费级 GPU 上成为可能：</p>
+            <div class="formula-box">
+                <div class="formula-label">LoRA 低秩分解</div>
+                $$\Delta W = BA, \quad \text{where } B \in \mathbb{R}^{d \times r}, A \in \mathbb{R}^{r \times k}, \quad r \ll \min(d, k)$$
+            </div>
+
+            <h3 style="font-size:1.15rem;font-weight:600;margin:28px 0 16px;">GRPO vs PPO：核心对比</h3>
+            <div class="compare-box">
+                <div class="compare-side ppo">
+                    <h4>PPO（传统方案）</h4>
+                    <ul>
+                        <li><span class="icon">❌</span> 需要 4 个模型：Policy + Reference + Value + Reward</li>
+                        <li><span class="icon">❌</span> 训练复杂且不稳定，4 个模型之间相互影响</li>
+                        <li><span class="icon">❌</span> 显存消耗巨大（Value Model 与 Policy 同等规模）</li>
+                        <li><span class="icon">❌</span> 超参数多，调参困难</li>
+                        <li><span class="icon">⚠️</span> Value Model 估计不准会影响训练效果</li>
+                    </ul>
+                </div>
+                <div class="compare-side grpo">
+                    <h4>GRPO（精简方案）</h4>
+                    <ul>
+                        <li><span class="icon">✅</span> 只需 2 个模型：Policy + Reference</li>
+                        <li><span class="icon">✅</span> 用组内相对奖励代替 Value Model</li>
+                        <li><span class="icon">✅</span> 显存消耗大幅降低</li>
+                        <li><span class="icon">✅</span> 训练更稳定，超参数更少</li>
+                        <li><span class="icon">✅</span> 同一问题生成多个回答，组内比较作为基线</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="formula-box" style="margin-top:20px;">
+                <div class="formula-label">GRPO 损失函数</div>
+                $$\mathcal{L}_{\text{GRPO}}(\theta) = \mathbb{E}_{s,a \sim \pi_\theta} \left[ \frac{\pi_\theta(a|s)}{\pi_{\text{ref}}(a|s)} \cdot (r(s,a) - \bar{r}_{\text{group}}) \right] - \beta \cdot D_{KL}(\pi_\theta || \pi_{\text{ref}})$$
+            </div>
+
+            <p style="color:var(--text-secondary);margin:12px 0;font-size:0.9rem;">其中 $\bar{r}_{\text{group}}$ 是同一 prompt 生成的多个回答的平均奖励，作为基线替代 Value Model 的估计。这种方法既降低了计算成本，又避免了 Value Model 估计不准确的偏差。</p>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin:28px 0 16px;">训练流水线</h3>
+            <div class="pipeline-flow">
+                <div class="pipeline-step s1">数据准备</div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step s2">SFT 训练</div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step s3">SFT 评估</div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step s4">GRPO 训练</div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step s5">GRPO 评估</div>
+                <span class="pipeline-arrow">→</span>
+                <div class="pipeline-step s6">模型部署</div>
+            </div>
+
+            <div class="code-box" style="margin-top:20px;">
+                <pre><span class="comment"># GRPO 训练核心代码示意</span>
+<span class="keyword">from</span> trl <span class="keyword">import</span> GRPOTrainer, GRPOConfig
+
+<span class="comment"># 配置 GRPO 训练参数</span>
+config = GRPOConfig(
+    output_dir=<span class="string">"./grpo_model"</span>,
+    num_generations=<span class="class">8</span>,          <span class="comment"># 每个 prompt 生成 8 个回答</span>
+    per_device_train_batch_size=<span class="class">4</span>,
+    learning_rate=<span class="class">5e-7</span>,
+    beta=<span class="class">0.04</span>,                 <span class="comment"># KL 惩罚系数</span>
+    max_new_tokens=<span class="class">512</span>,
+)
+
+<span class="comment"># 使用自定义奖励函数</span>
+<span class="keyword">def</span> <span class="function">reward_fn</span>(completions, **kwargs):
+    <span class="keyword">return</span> [compute_reward(c, k) <span class="keyword">for</span> c, k <span class="keyword">in</span> <span class="function">zip</span>(completions, kwargs[<span class="string">"answer"</span>])]
+
+trainer = GRPOTrainer(
+    model=sft_model,
+    args=config,
+    reward_funcs=reward_fn,
+    train_dataset=dataset,
+)
+trainer.train()</pre>
+            </div>
+        </section>
+
+        <!-- Section 6: 模型评估与总结 -->
+        <section class="section">
+            <h2 class="section-title pink">模型评估与总结</h2>
+
+            <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:16px;">评估指标三大类</h3>
+
+            <div class="metric-group">
+                <h4>📐 准确性指标</h4>
+                <div class="metric-items">
+                    <div class="metric-item">
+                        <strong>Accuracy</strong>
+                        <span>最终答案正确率，最直接的评估指标</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>Top-K 准确率</strong>
+                        <span>前 K 个采样中至少一个正确的比例</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>数值误差</strong>
+                        <span>预测值与真实值的数值偏差</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-group">
+                <h4>⚡ 效率指标</h4>
+                <div class="metric-items">
+                    <div class="metric-item">
+                        <strong>平均长度</strong>
+                        <span>生成回答的平均 token 数</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>推理步骤数</strong>
+                        <span>完成推理所需的中间步骤数量</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>推理时间</strong>
+                        <span>从输入到输出所消耗的时间</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="metric-group">
+                <h4>🔍 质量指标</h4>
+                <div class="metric-items">
+                    <div class="metric-item">
+                        <strong>格式正确率</strong>
+                        <span>输出是否符合预期格式规范</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>推理连贯性</strong>
+                        <span>各推理步骤之间逻辑是否自洽</span>
+                    </div>
+                    <div class="metric-item">
+                        <strong>可解释性</strong>
+                        <span>推理过程是否清晰、可理解</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="code-box" style="margin-top:20px;">
+                <pre><span class="comment"># 评估示例</span>
+<span class="keyword">def</span> <span class="function">evaluate_model</span>(model, eval_dataset):
+    results = {<span class="string">"accuracy"</span>: [], <span class="string">"avg_length"</span>: [], <span class="string">"format_rate"</span>: []}
+    <span class="keyword">for</span> sample <span class="keyword">in</span> eval_dataset:
+        output = model.generate(sample[<span class="string">"question"</span>])
+        <span class="comment"># 准确率</span>
+        results[<span class="string">"accuracy"</span>].append(output == sample[<span class="string">"answer"</span>])
+        <span class="comment"># 平均长度</span>
+        results[<span class="string">"avg_length"</span>].append(<span class="function">len</span>(output.split()))
+        <span class="comment"># 格式正确率</span>
+        results[<span class="string">"format_rate"</span>].append(check_format(output))
+
+    <span class="keyword">return</span> {k: <span class="function">sum</span>(v) / <span class="function">len</span>(v) <span class="keyword">for</span> k, v <span class="keyword">in</span> results.items()}</pre>
+            </div>
+
+            <h3 style="font-size:1.15rem;font-weight:600;margin:32px 0 16px;">总结：为什么需要 Agentic RL?</h3>
+            <div class="summary-box">
+                <div class="summary-title">核心逻辑链</div>
+                <div class="logic-chain">
+                    <div class="logic-item">
+                        <span class="logic-arrow">→</span>
+                        <div class="logic-text">因为<strong>预训练模型不会遵循指令</strong> → 所以需要 <strong>SFT</strong></div>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-arrow">→</span>
+                        <div class="logic-text">因为<strong>SFT 只能模仿训练数据</strong> → 所以需要 <strong>RL (GRPO)</strong></div>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-arrow">→</span>
+                        <div class="logic-text">因为<strong>PPO 太复杂</strong> → 所以选择 <strong>GRPO</strong></div>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-arrow">→</span>
+                        <div class="logic-text">因为<strong>单步奖励不够</strong> → 所以设计<strong>多步奖励函数</strong></div>
+                    </div>
+                    <div class="logic-item">
+                        <span class="logic-arrow">→</span>
+                        <div class="logic-text">因为<strong>需要平衡多个目标</strong> → 所以<strong>组合多种奖励函数</strong></div>
+                    </div>
+                </div>
+                <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border-color);">
+                    <p style="font-size:0.95rem;color:var(--text-secondary);">
+                        <strong>一句话总结</strong>：Agentic RL 将 LLM 从"单轮回复机器"升级为"多步决策智能体"，通过 SFT 打基础、GRPO 做强化、组合奖励做引导，让 AI 学会推理、规划、自我改进——真正具备解决复杂任务的能力。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-links">
+                <a href="index.html">← RL演进</a>
+                <a href="parallel.html">并行策略</a>
+                <a href="langgraph.html">LangGraph</a>
+                <a href="agentic_rl.html">Agentic RL</a>
+            </div>
+            <p>Agentic RL 学习页面 · 内容参考自 Hello-Agents AI Cookbook</p>
+        </footer>
+    </main>
+
+    <script>
+        // Render math with KaTeX
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            // Smooth scroll for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
